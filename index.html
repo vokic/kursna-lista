@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Currency Converter</title>
+  </head>
+  <body>
+    <h2>Currency Converter</h2>
+
+    <div>
+      <label for="eurInput">EUR:</label>
+      <input type="number" id="eurInput" value="0" />
+    </div>
+
+    <div>
+      <label for="rsdInput">RSD:</label>
+      <input type="number" id="rsdInput" value="0" />
+    </div>
+
+    <div>
+      <label for="usdInput">USD:</label>
+      <input type="number" id="usdInput" value="0" />
+    </div>
+
+    <script>
+      async function fetchExchangeRates() {
+        const url =
+          "https://api.kursna-lista.info/b7afe02d7a55a72d2d233cffdc0644c0/kursna_lista/json";
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error("Failed to fetch exchange rates");
+          }
+          const data = await response.json();
+          return data.result;
+        } catch (error) {
+          console.error(error);
+          return null;
+        }
+      }
+
+      async function convertCurrency(fromCurrency, toCurrency, value) {
+        const exchangeRates = await fetchExchangeRates();
+
+        if (!exchangeRates) {
+          console.error("Failed to fetch exchange rates");
+          return;
+        }
+
+        let convertedAmount;
+        if (fromCurrency === "rsd") {
+          convertedAmount = value / exchangeRates[toCurrency].sre;
+        } else if (toCurrency === "rsd") {
+          convertedAmount = value * exchangeRates[fromCurrency].sre;
+        } else {
+          convertedAmount =
+            (value * exchangeRates[fromCurrency].sre) /
+            exchangeRates[toCurrency].sre;
+        }
+
+        return convertedAmount.toFixed(2);
+      }
+
+      // Add event listeners to each input field
+      document
+        .getElementById("eurInput")
+        .addEventListener("input", async function () {
+          const eurValue = parseFloat(this.value);
+          const rsdInput = document.getElementById("rsdInput");
+          const usdInput = document.getElementById("usdInput");
+
+          const rsdValue = await convertCurrency("eur", "rsd", eurValue);
+          const usdValue = await convertCurrency("eur", "usd", eurValue);
+
+          rsdInput.value = rsdValue;
+          usdInput.value = usdValue;
+        });
+
+      document
+        .getElementById("rsdInput")
+        .addEventListener("input", async function () {
+          const rsdValue = parseFloat(this.value);
+          const eurInput = document.getElementById("eurInput");
+          const usdInput = document.getElementById("usdInput");
+
+          const eurValue = await convertCurrency("rsd", "eur", rsdValue);
+          const usdValue = await convertCurrency("rsd", "usd", rsdValue);
+
+          eurInput.value = eurValue;
+          usdInput.value = usdValue;
+        });
+
+      document
+        .getElementById("usdInput")
+        .addEventListener("input", async function () {
+          const usdValue = parseFloat(this.value);
+          const eurInput = document.getElementById("eurInput");
+          const rsdInput = document.getElementById("rsdInput");
+
+          const eurValue = await convertCurrency("usd", "eur", usdValue);
+          const rsdValue = await convertCurrency("usd", "rsd", usdValue);
+
+          eurInput.value = eurValue;
+          rsdInput.value = rsdValue;
+        });
+
+      // Initial conversion
+      fetchExchangeRates().then(() => {
+        document.getElementById("eurInput").dispatchEvent(new Event("input"));
+      });
+    </script>
+  </body>
+</html>
