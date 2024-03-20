@@ -3,112 +3,176 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Currency Converter</title>
+    <title>Simple currency converter (JS)</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
   </head>
-  <body>
-    <h2>Currency Converter</h2>
+  <body class="bg-gray-100 p-8">
+    <div class="max-w-xs mx-auto bg-white rounded-lg shadow-md p-6">
+      <h1 class="text-2xl font-semibold mb-4">Konvertor valuta</h1>
+      <div class="flex flex-col space-y-4">
+        <div class="flex items-center">
+          <img src="https://flagcdn.com/w20/eu.png" alt="EUR" class="mr-2" />
+          <input
+            type="text"
+            id="eurInput"
+            placeholder="EUR"
+            class="border-gray-300 border p-2 rounded-md"
+          />
+        </div>
 
-    <div>
-      <label for="eurInput">EUR:</label>
-      <input type="number" id="eurInput" value="0" />
-    </div>
+        <div class="flex items-center">
+          <img src="https://flagcdn.com/w20/rs.png" alt="RSD" class="mr-2" />
+          <input
+            type="text"
+            id="rsdInput"
+            placeholder="RSD"
+            class="border-gray-300 border p-2 rounded-md"
+          />
+        </div>
 
-    <div>
-      <label for="rsdInput">RSD:</label>
-      <input type="number" id="rsdInput" value="0" />
-    </div>
+        <div class="flex items-center">
+          <img src="https://flagcdn.com/w20/us.png" alt="USD" class="mr-2" />
+          <input
+            type="text"
+            id="usdInput"
+            placeholder="USD"
+            class="border-gray-300 border p-2 rounded-md"
+          />
+        </div>
 
-    <div>
-      <label for="usdInput">USD:</label>
-      <input type="number" id="usdInput" value="0" />
+        <div class="flex items-center">
+          <img src="https://flagcdn.com/w20/ch.png" alt="CHF" class="mr-2" />
+          <input
+            type="text"
+            id="chfInput"
+            placeholder="CHF"
+            class="border-gray-300 border p-2 rounded-md"
+          />
+        </div>
+      </div>
     </div>
 
     <script>
-      async function fetchExchangeRates() {
-        const url =
-          "https://api.kursna-lista.info/b7afe02d7a55a72d2d233cffdc0644c0/kursna_lista/json";
-        try {
-          const response = await fetch(url);
-          if (!response.ok) {
-            throw new Error("Failed to fetch exchange rates");
-          }
-          const data = await response.json();
-          return data.result;
-        } catch (error) {
-          console.error(error);
-          return null;
-        }
+      // Currency exchange rates for 1 RSD
+      const exchangeRates = {
+        EUR: 117.1695,
+        USD: 108.3398,
+        CHF: 122.43,
+        // Add more rates
+      };
+
+      // Function to convert RSD to a given currency
+      function convertRSDtoCurrency(rsd, currency) {
+        return rsd / exchangeRates[currency];
       }
 
-      async function convertCurrency(fromCurrency, toCurrency, value) {
-        const exchangeRates = await fetchExchangeRates();
-
-        if (!exchangeRates) {
-          console.error("Failed to fetch exchange rates");
-          return;
-        }
-
-        let convertedAmount;
-        if (fromCurrency === "rsd") {
-          convertedAmount = value / exchangeRates[toCurrency].sre;
-        } else if (toCurrency === "rsd") {
-          convertedAmount = value * exchangeRates[fromCurrency].sre;
-        } else {
-          convertedAmount =
-            (value * exchangeRates[fromCurrency].sre) /
-            exchangeRates[toCurrency].sre;
-        }
-
-        return convertedAmount.toFixed(2);
+      // Function to convert a given currency to RSD
+      function convertCurrencyToRSD(amount, currency) {
+        return amount * exchangeRates[currency];
       }
 
-      // Add event listeners to each input field
-      document
-        .getElementById("eurInput")
-        .addEventListener("input", async function () {
-          const eurValue = parseFloat(this.value);
-          const rsdInput = document.getElementById("rsdInput");
-          const usdInput = document.getElementById("usdInput");
-
-          const rsdValue = await convertCurrency("eur", "rsd", eurValue);
-          const usdValue = await convertCurrency("eur", "usd", eurValue);
-
-          rsdInput.value = rsdValue;
-          usdInput.value = usdValue;
-        });
-
+      // Event listener for RSD input field
       document
         .getElementById("rsdInput")
-        .addEventListener("input", async function () {
-          const rsdValue = parseFloat(this.value);
-          const eurInput = document.getElementById("eurInput");
-          const usdInput = document.getElementById("usdInput");
-
-          const eurValue = await convertCurrency("rsd", "eur", rsdValue);
-          const usdValue = await convertCurrency("rsd", "usd", rsdValue);
-
-          eurInput.value = eurValue;
-          usdInput.value = usdValue;
+        .addEventListener("input", function () {
+          const rsd = parseFloat(this.value);
+          if (!isNaN(rsd)) {
+            document.getElementById("eurInput").value = convertRSDtoCurrency(
+              rsd,
+              "EUR"
+            ).toFixed(2);
+            document.getElementById("usdInput").value = convertRSDtoCurrency(
+              rsd,
+              "USD"
+            ).toFixed(2);
+            document.getElementById("chfInput").value = convertRSDtoCurrency(
+              rsd,
+              "CHF"
+            ).toFixed(2);
+          } else {
+            document.getElementById("eurInput").value = "";
+            document.getElementById("usdInput").value = "";
+            document.getElementById("chfInput").value = "";
+          }
         });
 
+      // Event listener for EUR input field
+      document
+        .getElementById("eurInput")
+        .addEventListener("input", function () {
+          const eur = parseFloat(this.value);
+          if (!isNaN(eur)) {
+            document.getElementById("rsdInput").value = convertCurrencyToRSD(
+              eur,
+              "EUR"
+            ).toFixed(2);
+            document.getElementById("usdInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "USD"
+            ).toFixed(2);
+            document.getElementById("chfInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "CHF"
+            ).toFixed(2);
+          } else {
+            document.getElementById("rsdInput").value = "";
+            document.getElementById("usdInput").value = "";
+            document.getElementById("chfInput").value = "";
+          }
+        });
+
+      // Event listener for USD input field
       document
         .getElementById("usdInput")
-        .addEventListener("input", async function () {
-          const usdValue = parseFloat(this.value);
-          const eurInput = document.getElementById("eurInput");
-          const rsdInput = document.getElementById("rsdInput");
-
-          const eurValue = await convertCurrency("usd", "eur", usdValue);
-          const rsdValue = await convertCurrency("usd", "rsd", usdValue);
-
-          eurInput.value = eurValue;
-          rsdInput.value = rsdValue;
+        .addEventListener("input", function () {
+          const usd = parseFloat(this.value);
+          if (!isNaN(usd)) {
+            document.getElementById("rsdInput").value = convertCurrencyToRSD(
+              usd,
+              "USD"
+            ).toFixed(2);
+            document.getElementById("eurInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "EUR"
+            ).toFixed(2);
+            document.getElementById("chfInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "CHF"
+            ).toFixed(2);
+          } else {
+            document.getElementById("rsdInput").value = "";
+            document.getElementById("eurInput").value = "";
+            document.getElementById("chfInput").value = "";
+          }
         });
 
-      // Initial conversion
-      fetchExchangeRates().then(() => {
-        document.getElementById("eurInput").dispatchEvent(new Event("input"));
-      });
+      // Event listener for CHF input field
+      document
+        .getElementById("chfInput")
+        .addEventListener("input", function () {
+          const chf = parseFloat(this.value);
+          if (!isNaN(chf)) {
+            document.getElementById("rsdInput").value = convertCurrencyToRSD(
+              chf,
+              "CHF"
+            ).toFixed(2);
+            document.getElementById("eurInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "EUR"
+            ).toFixed(2);
+            document.getElementById("usdInput").value = convertRSDtoCurrency(
+              parseFloat(document.getElementById("rsdInput").value),
+              "USD"
+            ).toFixed(2);
+          } else {
+            document.getElementById("rsdInput").value = "";
+            document.getElementById("eurInput").value = "";
+            document.getElementById("usdInput").value = "";
+          }
+        });
     </script>
   </body>
 </html>
